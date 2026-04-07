@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { OrgNode, Vertical } from '@/types'
 import NodeEditor from './NodeEditor'
 import Overview from './Overview'
@@ -24,6 +24,34 @@ export default function Sidebar({
   saving, onSave, onAddChild, onAddSibling, onDelete, onSaveNotes, onDeptFilter,
 }: Props) {
   const [tab, setTab] = useState(0)
+  const [width, setWidth] = useState(290)
+  const draggingRef = useRef(false)
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!draggingRef.current) return
+      const w = window.innerWidth - e.clientX
+      setWidth(Math.min(640, Math.max(220, w)))
+    }
+    const onUp = () => {
+      if (!draggingRef.current) return
+      draggingRef.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [])
+
+  const startDrag = () => {
+    draggingRef.current = true
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }
 
   const activeNodes = nodes.filter(n => n.vertical_id === activeVertical)
   const curNode = activeNodes.find(n => n.id === selected) || null
@@ -41,7 +69,12 @@ export default function Sidebar({
   )
 
   return (
-    <div style={{ width: 290, borderLeft: '1px solid #d8d5d2', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0 }}>
+    <div style={{ width, borderLeft: '1px solid #d8d5d2', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+      {/* Resize handle */}
+      <div
+        onMouseDown={startDrag}
+        style={{ position: 'absolute', left: -3, top: 0, bottom: 0, width: 6, cursor: 'col-resize', zIndex: 10 }}
+      />
       {/* Tab bar */}
       <div style={{ display: 'flex', borderBottom: '1px solid #d8d5d2', flexShrink: 0 }}>
         {['Node editor', 'Overview'].map(tabBtn)}
