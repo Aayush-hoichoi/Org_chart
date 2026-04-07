@@ -25,6 +25,7 @@ export default function Sidebar({
 }: Props) {
   const [tab, setTab] = useState(0)
   const [width, setWidth] = useState(290)
+  const [collapsed, setCollapsed] = useState(false)
   const draggingRef = useRef(false)
 
   useEffect(() => {
@@ -69,19 +70,29 @@ export default function Sidebar({
   )
 
   return (
-    <div style={{ width, borderLeft: '1px solid #d8d5d2', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-      {/* Resize handle */}
+    <div style={{ width: collapsed ? 0 : width, borderLeft: collapsed ? 'none' : '1px solid #d8d5d2', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'visible', flexShrink: 0, position: 'relative', transition: 'width .2s ease' }}>
+      {/* Collapse toggle */}
+      <button
+        onClick={() => setCollapsed(c => !c)}
+        title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+        style={{ position: 'absolute', left: -28, top: 12, width: 24, height: 24, borderRadius: 6, border: '1px solid #d8d5d2', background: '#fff', cursor: 'pointer', fontSize: 13, lineHeight: 1, color: '#6f6d6b', zIndex: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>
+        {collapsed ? '‹' : '›'}
+      </button>
+      {!collapsed && (
       <div
         onMouseDown={startDrag}
         style={{ position: 'absolute', left: -3, top: 0, bottom: 0, width: 6, cursor: 'col-resize', zIndex: 10 }}
       />
+      )}
       {/* Tab bar */}
+      {!collapsed && (
       <div style={{ display: 'flex', borderBottom: '1px solid #d8d5d2', flexShrink: 0 }}>
         {['Node editor', 'Overview'].map(tabBtn)}
       </div>
+      )}
 
       {/* Tab 0 — Node editor */}
-      {tab === 0 && (
+      {!collapsed && tab === 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <NodeEditor
             node={curNode}
@@ -124,7 +135,7 @@ export default function Sidebar({
       )}
 
       {/* Tab 1 — Overview */}
-      {tab === 1 && (
+      {!collapsed && tab === 1 && (
         <Overview vertical={vert} nodes={activeNodes} onSaveNotes={onSaveNotes} />
       )}
     </div>
