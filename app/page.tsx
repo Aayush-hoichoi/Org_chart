@@ -162,7 +162,7 @@ export default function Page() {
               onClick={() => setActive(v.id)}
               style={{
                 padding: '5px 13px', borderRadius: 7,
-                border: '1px solid transparent', background: 'transparent',
+                border: '1px solid transparent',
                 cursor: 'pointer', fontSize: 12, fontWeight: 500,
                 color: v.id === active ? '#fff' : '#6f6d6b',
                 background: v.id === active ? '#141414' : 'transparent',
