@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useOrgChart } from '@/hooks/useOrgChart'
 import OrgCanvas from '@/components/OrgCanvas'
 import Sidebar from '@/components/Sidebar'
-import type { OrgNode } from '@/types'
+import type { OrgNode, StatusType } from '@/types'
 
 function gId() {
   return '_' + Math.random().toString(36).slice(2, 9)
@@ -29,6 +29,7 @@ export default function Page() {
   const [active, setActive]       = useState('hoichoi')
   const [selected, setSelected]   = useState<string | null>(null)
   const [deptFilter, setDeptFilter] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<StatusType>(null)
   const [fitSignal, setFitSignal] = useState(0)
   const [showModal, setShowModal] = useState(false)
   const [newVertName, setNewVertName] = useState('')
@@ -38,6 +39,7 @@ export default function Page() {
   useEffect(() => {
     setSelected(null)
     setDeptFilter(null)
+    setStatusFilter(null)
     setFitSignal(s => s + 1)
   }, [active])
 
@@ -206,8 +208,9 @@ export default function Page() {
           nodes={activeNodes}
           selected={selected}
           deptFilter={deptFilter}
-          onSelect={id => { setSelected(id); setDeptFilter(null) }}
-          onDeselect={() => { setSelected(null); setDeptFilter(null) }}
+          statusFilter={statusFilter}
+          onSelect={id => { setSelected(id); setDeptFilter(null); setStatusFilter(null) }}
+          onDeselect={() => { setSelected(null); setDeptFilter(null); setStatusFilter(null) }}
           transformRef={transformRef}
           onTransformChange={() => {}}
           fitSignal={fitSignal}
@@ -227,6 +230,8 @@ export default function Page() {
           onDelete={handleDelete}
           onSaveNotes={handleSaveNotes}
           onDeptFilter={setDeptFilter}
+          statusFilter={statusFilter}
+          onStatusFilter={setStatusFilter}
         />
       </div>
 

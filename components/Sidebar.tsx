@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import type { OrgNode, Vertical } from '@/types'
+import type { OrgNode, Vertical, StatusType } from '@/types'
 import NodeEditor from './NodeEditor'
 import Overview from './Overview'
 
@@ -17,11 +17,14 @@ interface Props {
   onDelete: (ids: Set<string>) => void
   onSaveNotes: (notes: string) => void
   onDeptFilter: (dept: string | null) => void
+  statusFilter: StatusType
+  onStatusFilter: (s: StatusType) => void
 }
 
 export default function Sidebar({
   selected, nodes, verticals, activeVertical, deptFilter,
   saving, onSave, onAddChild, onAddSibling, onDelete, onSaveNotes, onDeptFilter,
+  statusFilter, onStatusFilter,
 }: Props) {
   const [tab, setTab] = useState(0)
   const [width, setWidth] = useState(290)
@@ -136,7 +139,7 @@ export default function Sidebar({
 
       {/* Tab 1 — Overview */}
       {!collapsed && tab === 1 && (
-        <Overview vertical={vert} nodes={activeNodes} onSaveNotes={onSaveNotes} />
+        <Overview vertical={vert} nodes={activeNodes} onSaveNotes={onSaveNotes} statusFilter={statusFilter} onStatusFilter={onStatusFilter} />
       )}
     </div>
   )

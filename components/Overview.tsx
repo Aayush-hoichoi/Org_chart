@@ -1,14 +1,16 @@
 'use client'
 import { useEffect, useRef } from 'react'
-import type { OrgNode, Vertical } from '@/types'
+import type { OrgNode, Vertical, StatusType } from '@/types'
 
 interface Props {
   vertical: Vertical | undefined
   nodes: OrgNode[]
   onSaveNotes: (notes: string) => void
+  statusFilter: StatusType
+  onStatusFilter: (s: StatusType) => void
 }
 
-export default function Overview({ vertical, nodes, onSaveNotes }: Props) {
+export default function Overview({ vertical, nodes, onSaveNotes, statusFilter, onStatusFilter }: Props) {
   const total = nodes.length
   const deptCount: Record<string, number> = {}
   const stCount = { payroll: 0, consultant: 0 }
@@ -53,12 +55,38 @@ export default function Overview({ vertical, nodes, onSaveNotes }: Props) {
 
         {/* Status pills */}
         {(stCount.payroll + stCount.consultant) > 0 && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10, padding: '7px 0', borderBottom: '1px solid #d8d5d2', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10, padding: '7px 0', borderBottom: '1px solid #d8d5d2', flexWrap: 'wrap', alignItems: 'center' }}>
             {stCount.payroll > 0 && (
-              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#dbeafe', color: '#1e40af' }}>● Payroll {stCount.payroll}</span>
+              <button
+                onClick={() => onStatusFilter(statusFilter === 'payroll' ? null : 'payroll')}
+                style={{
+                  fontSize: 11, padding: '3px 9px', borderRadius: 20, cursor: 'pointer',
+                  border: statusFilter === 'payroll' ? '1px solid #1e40af' : '1px solid transparent',
+                  background: statusFilter === 'payroll' ? '#1e40af' : '#dbeafe',
+                  color: statusFilter === 'payroll' ? '#fff' : '#1e40af',
+                  fontFamily: 'inherit', fontWeight: 600,
+                }}>
+                ● Payroll {stCount.payroll}
+              </button>
             )}
             {stCount.consultant > 0 && (
-              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#fef3c7', color: '#92400e' }}>● Consultant {stCount.consultant}</span>
+              <button
+                onClick={() => onStatusFilter(statusFilter === 'consultant' ? null : 'consultant')}
+                style={{
+                  fontSize: 11, padding: '3px 9px', borderRadius: 20, cursor: 'pointer',
+                  border: statusFilter === 'consultant' ? '1px solid #92400e' : '1px solid transparent',
+                  background: statusFilter === 'consultant' ? '#92400e' : '#fef3c7',
+                  color: statusFilter === 'consultant' ? '#fff' : '#92400e',
+                  fontFamily: 'inherit', fontWeight: 600,
+                }}>
+                ● Consultant {stCount.consultant}
+              </button>
+            )}
+            {statusFilter && (
+              <button onClick={() => onStatusFilter(null)}
+                style={{ fontSize: 11, padding: '3px 8px', borderRadius: 20, background: '#f7f6f5', border: '1px solid #d8d5d2', cursor: 'pointer', color: '#6f6d6b', fontFamily: 'inherit' }}>
+                ✕ Clear
+              </button>
             )}
           </div>
         )}

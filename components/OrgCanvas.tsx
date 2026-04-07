@@ -1,6 +1,6 @@
 'use client'
 import { useRef, useEffect, useState, useCallback, type MouseEvent, type WheelEvent } from 'react'
-import type { OrgNode } from '@/types'
+import type { OrgNode, StatusType } from '@/types'
 import { computeLayout, NW, NH } from '@/lib/layout'
 import NodeCard from './NodeCard'
 
@@ -10,6 +10,7 @@ interface Props {
   nodes: OrgNode[]
   selected: string | null
   deptFilter: string | null
+  statusFilter: StatusType
   onSelect: (id: string) => void
   onDeselect: () => void
   transformRef: React.MutableRefObject<Transform>
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export default function OrgCanvas({
-  nodes, selected, deptFilter, onSelect, onDeselect,
+  nodes, selected, deptFilter, statusFilter, onSelect, onDeselect,
   transformRef, onTransformChange, fitSignal,
 }: Props) {
   const cwRef = useRef<HTMLDivElement>(null)
@@ -57,11 +58,20 @@ export default function OrgCanvas({
     const minY = Math.min(...ns.map(n => n._y!))
     const maxY = Math.max(...ns.map(n => n._y! + NH))
     const tw = maxX - minX + 120, th = maxY - minY + 120
-    const k = Math.min(W / tw, H / th, 1.1)
+    const k = Math.min(W / tw, H / th, 1.4)
     applyT({ k, x: (W - tw * k) / 2 - minX * k + 60 * k, y: (H - th * k) / 2 - minY * k + 60 * k })
   }, [nodes, m, applyT]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setTimeout(fit, 150) }, [fitSignal]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refit when container is resized (sidebar collapse, window resize, etc.)
+  useEffect(() => {
+    const el = cwRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => { setTimeout(fit, 50) })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [fit])
 
   // Wheel: pinch/ctrl = zoom, swipe = pan
   useEffect(() => {
@@ -154,7 +164,7 @@ export default function OrgCanvas({
               <NodeCard
                 node={n}
                 selected={selected === n.id}
-                dimmed={!!deptFilter && n.dept !== deptFilter}
+                dimmed={(!!deptFilter && n.dept !== deptFilter) || (!!statusFilter && n.status !== statusFilter)}
                 nodeRef={el => { nodeRefs.current[n.id] = el }}
                 onClick={() => onSelect(n.id)}
               />
