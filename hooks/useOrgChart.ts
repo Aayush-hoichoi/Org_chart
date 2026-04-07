@@ -21,7 +21,7 @@ export function useOrgChart() {
       const { data: verts, error: vErr } = await supabase
         .from('oc_verticals')
         .select('*')
-        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
 
       if (vErr) throw vErr
 
@@ -33,7 +33,7 @@ export function useOrgChart() {
       const { data: nds, error: nErr } = await supabase
         .from('oc_nodes')
         .select('*')
-        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
 
       if (nErr) throw nErr
       setVerticals(verts)
@@ -60,8 +60,8 @@ export function useOrgChart() {
         if (nErr) throw nErr
       }
 
-      const { data: verts } = await supabase.from('oc_verticals').select('*').order('created_at')
-      const { data: nds } = await supabase.from('oc_nodes').select('*').order('created_at')
+      const { data: verts } = await supabase.from('oc_verticals').select('*').order('id')
+      const { data: nds } = await supabase.from('oc_nodes').select('*').order('id')
       setVerticals(verts || [])
       setNodes(nds || [])
     } catch (e: unknown) {
@@ -77,14 +77,16 @@ export function useOrgChart() {
   // ── Mutations ────────────────────────────────────────────────────────
   const saveNode = async (node: OrgNode): Promise<boolean> => {
     setSaving(true)
-    const { error } = await supabase.from('oc_nodes').upsert([node], { onConflict: 'id' })
+    // Strip layout-only fields before persisting
+    const { _x, _y, _ch, created_at, updated_at, ...payload } = node
+    const { error } = await supabase.from('oc_nodes').upsert([payload], { onConflict: 'id' })
     setSaving(false)
     if (error) { setError(error.message); return false }
     setNodes(prev => {
       const exists = prev.find(n => n.id === node.id)
       return exists
-        ? prev.map(n => n.id === node.id ? { ...n, ...node } : n)
-        : [...prev, node]
+        ? prev.map(n => n.id === node.id ? { ...n, ...payload } : n)
+        : [...prev, { ...payload } as OrgNode]
     })
     return true
   }
