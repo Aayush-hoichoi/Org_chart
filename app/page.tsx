@@ -282,7 +282,7 @@ function VerticalInfoCard({
 
   return (
     <div style={{
-      position: 'absolute', top: 12, left: 12, zIndex: 5,
+      position: 'absolute', bottom: 12, left: 12, zIndex: 5,
       background: '#fff', border: '1px solid #d8d5d2', borderRadius: 10,
       padding: open ? '11px 13px' : '7px 11px', width: open ? 244 : 'auto',
       boxShadow: '0 2px 8px rgba(20,20,20,.06)', fontFamily: 'inherit',
