@@ -58,20 +58,11 @@ export default function OrgCanvas({
     const minY = Math.min(...ns.map(n => n._y!))
     const maxY = Math.max(...ns.map(n => n._y! + NH))
     const tw = maxX - minX + 120, th = maxY - minY + 120
-    const k = Math.min(W / tw, H / th, 1.4)
+    const k = Math.min(W / tw, H / th, 1.1)
     applyT({ k, x: (W - tw * k) / 2 - minX * k + 60 * k, y: (H - th * k) / 2 - minY * k + 60 * k })
   }, [nodes, m, applyT]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setTimeout(fit, 150) }, [fitSignal]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Refit when container is resized (sidebar collapse, window resize, etc.)
-  useEffect(() => {
-    const el = cwRef.current
-    if (!el) return
-    const ro = new ResizeObserver(() => { setTimeout(fit, 50) })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [fit])
 
   // Wheel: pinch/ctrl = zoom, swipe = pan
   useEffect(() => {

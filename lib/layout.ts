@@ -1,9 +1,9 @@
 import type { OrgNode } from '@/types'
 
-export const NW = 200
-export const NH = 110
-export const HG = 22
-export const VG = 70
+export const NW = 210
+export const NH = 120
+export const HG = 56
+export const VG = 110
 
 export function computeLayout(nodes: OrgNode[]): Record<string, OrgNode> {
   if (!nodes.length) return {}
