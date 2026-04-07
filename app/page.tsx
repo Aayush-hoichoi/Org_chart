@@ -194,6 +194,7 @@ export default function Page() {
 
       {/* ── Main area ── */}
       <div style={{ position: 'absolute', top: 46, bottom: 0, left: 0, right: 0, display: 'flex' }}>
+        <div style={{ position: 'relative', flex: 1, display: 'flex', minWidth: 0 }}>
 
         <VerticalInfoCard
           vertical={verticals.find(v => v.id === active)}
@@ -211,6 +212,7 @@ export default function Page() {
           onTransformChange={() => {}}
           fitSignal={fitSignal}
         />
+        </div>
 
         <Sidebar
           selected={selected}
