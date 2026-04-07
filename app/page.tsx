@@ -195,6 +195,12 @@ export default function Page() {
       {/* ── Main area ── */}
       <div style={{ position: 'absolute', top: 46, bottom: 0, left: 0, right: 0, display: 'flex' }}>
 
+        <VerticalInfoCard
+          vertical={verticals.find(v => v.id === active)}
+          count={activeNodes.length}
+          onSaveNotes={handleSaveNotes}
+        />
+
         <OrgCanvas
           nodes={activeNodes}
           selected={selected}
@@ -250,6 +256,62 @@ export default function Page() {
             </div>
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+// ── Per-vertical info card ─────────────────────────────────────────
+function VerticalInfoCard({
+  vertical, count, onSaveNotes,
+}: {
+  vertical: { id: string; name: string; notes: string } | undefined
+  count: number
+  onSaveNotes: (notes: string) => void
+}) {
+  const [open, setOpen] = useState(true)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  if (!vertical) return null
+
+  const handleNotes = (val: string) => {
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => onSaveNotes(val), 700)
+  }
+
+  return (
+    <div style={{
+      position: 'absolute', top: 12, left: 12, zIndex: 5,
+      background: '#fff', border: '1px solid #d8d5d2', borderRadius: 10,
+      padding: open ? '11px 13px' : '7px 11px', width: open ? 244 : 'auto',
+      boxShadow: '0 2px 8px rgba(20,20,20,.06)', fontFamily: 'inherit',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: '#141414', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {vertical.name}
+          </span>
+          <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: '#141414', color: '#fff', flexShrink: 0 }}>
+            {count} {count === 1 ? 'employee' : 'employees'}
+          </span>
+        </div>
+        <button onClick={() => setOpen(o => !o)}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6f6d6b', fontSize: 13, padding: 2, lineHeight: 1 }}>
+          {open ? '−' : '+'}
+        </button>
+      </div>
+      {open && (
+        <textarea
+          key={vertical.id}
+          defaultValue={vertical.notes || ''}
+          onChange={e => handleNotes(e.target.value)}
+          placeholder="Notes for this vertical…"
+          style={{
+            width: '100%', marginTop: 8, padding: '6px 9px',
+            border: '1px solid #d8d5d2', borderRadius: 7, background: '#fff',
+            color: '#141414', fontSize: 11.5, outline: 'none',
+            resize: 'vertical', minHeight: 64, fontFamily: 'inherit',
+          }}
+        />
       )}
     </div>
   )
