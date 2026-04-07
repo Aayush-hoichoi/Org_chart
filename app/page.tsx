@@ -263,7 +263,18 @@ export default function Page() {
   )
 }
 
-// ── Per-vertical info card ─────────────────────────────────────────
+// ── Per-vertical chat-style notes card ─────────────────────────────
+interface ChatMsg { id: string; text: string; ts: number }
+
+function parseMessages(notes: string | undefined): ChatMsg[] {
+  if (!notes) return []
+  try {
+    const parsed = JSON.parse(notes)
+    if (Array.isArray(parsed)) return parsed.filter(m => m && typeof m.text === 'string')
+  } catch {}
+  return notes.trim() ? [{ id: 'legacy', text: notes, ts: Date.now() }] : []
+}
+
 function VerticalInfoCard({
   vertical, count, onSaveNotes,
 }: {
@@ -272,48 +283,107 @@ function VerticalInfoCard({
   onSaveNotes: (notes: string) => void
 }) {
   const [open, setOpen] = useState(true)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const [messages, setMessages] = useState<ChatMsg[]>([])
+  const [draft, setDraft] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setMessages(parseMessages(vertical?.notes))
+    setDraft('')
+  }, [vertical?.id, vertical?.notes])
+
+  useEffect(() => {
+    if (open && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages, open])
+
   if (!vertical) return null
 
-  const handleNotes = (val: string) => {
-    clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => onSaveNotes(val), 700)
+  const send = () => {
+    const text = draft.trim()
+    if (!text) return
+    const next = [...messages, { id: Math.random().toString(36).slice(2, 9), text, ts: Date.now() }]
+    setMessages(next)
+    setDraft('')
+    onSaveNotes(JSON.stringify(next))
+  }
+
+  const remove = (id: string) => {
+    const next = messages.filter(m => m.id !== id)
+    setMessages(next)
+    onSaveNotes(JSON.stringify(next))
   }
 
   return (
     <div style={{
-      position: 'absolute', bottom: 12, left: 12, zIndex: 5,
-      background: '#fff', border: '1px solid #d8d5d2', borderRadius: 10,
-      padding: open ? '11px 13px' : '7px 11px', width: open ? 244 : 'auto',
-      boxShadow: '0 2px 8px rgba(20,20,20,.06)', fontFamily: 'inherit',
+      position: 'absolute', bottom: 12, right: 16, zIndex: 5,
+      background: '#fff', border: '1px solid #d8d5d2', borderRadius: 12,
+      width: open ? 300 : 'auto',
+      boxShadow: '0 4px 14px rgba(20,20,20,.08)', fontFamily: 'inherit',
+      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      maxHeight: open ? 380 : 'auto',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      {/* Header */}
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+          padding: '9px 12px', cursor: 'pointer',
+          borderBottom: open ? '1px solid #ececea' : 'none', background: '#fafaf9',
+        }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           <span style={{ fontSize: 12.5, fontWeight: 600, color: '#141414', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {vertical.name}
+            💬 {vertical.name}
           </span>
           <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: '#141414', color: '#fff', flexShrink: 0 }}>
-            {count} {count === 1 ? 'employee' : 'employees'}
+            {count}
           </span>
+          {messages.length > 0 && (
+            <span style={{ fontSize: 10.5, color: '#6f6d6b' }}>· {messages.length} note{messages.length === 1 ? '' : 's'}</span>
+          )}
         </div>
-        <button onClick={() => setOpen(o => !o)}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6f6d6b', fontSize: 13, padding: 2, lineHeight: 1 }}>
-          {open ? '−' : '+'}
-        </button>
+        <span style={{ color: '#6f6d6b', fontSize: 13, lineHeight: 1 }}>{open ? '▾' : '▸'}</span>
       </div>
+
       {open && (
-        <textarea
-          key={vertical.id}
-          defaultValue={vertical.notes || ''}
-          onChange={e => handleNotes(e.target.value)}
-          placeholder="Notes for this vertical…"
-          style={{
-            width: '100%', marginTop: 8, padding: '6px 9px',
-            border: '1px solid #d8d5d2', borderRadius: 7, background: '#fff',
-            color: '#141414', fontSize: 11.5, outline: 'none',
-            resize: 'vertical', minHeight: 64, fontFamily: 'inherit',
-          }}
-        />
+        <>
+          {/* Messages */}
+          <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 7, minHeight: 90, maxHeight: 240 }}>
+            {messages.length === 0 && (
+              <div style={{ fontSize: 11.5, color: '#aaa8a6', textAlign: 'center', padding: '18px 0' }}>
+                No notes yet. Add one below.
+              </div>
+            )}
+            {messages.map(m => (
+              <div key={m.id} style={{ alignSelf: 'flex-start', maxWidth: '92%', background: '#f3f1ef', border: '1px solid #ececea', borderRadius: 10, padding: '6px 9px', position: 'relative' }}>
+                <div style={{ fontSize: 11.5, color: '#141414', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{m.text}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 3, gap: 8 }}>
+                  <span style={{ fontSize: 9.5, color: '#aaa8a6' }}>
+                    {new Date(m.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  <button onClick={() => remove(m.id)}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#aaa8a6', fontSize: 10, padding: 0 }}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Input */}
+          <div style={{ display: 'flex', gap: 6, padding: '8px 10px', borderTop: '1px solid #ececea', background: '#fff' }}>
+            <input
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+              placeholder="Write a note…"
+              style={{ flex: 1, padding: '6px 10px', border: '1px solid #d8d5d2', borderRadius: 7, fontSize: 12, outline: 'none', fontFamily: 'inherit', background: '#fff', color: '#141414' }}
+            />
+            <button onClick={send} disabled={!draft.trim()}
+              style={{ padding: '6px 12px', border: '1px solid #141414', borderRadius: 7, background: '#141414', color: '#fff', fontSize: 11.5, cursor: draft.trim() ? 'pointer' : 'not-allowed', opacity: draft.trim() ? 1 : .5, fontFamily: 'inherit' }}>
+              Send
+            </button>
+          </div>
+        </>
       )}
     </div>
   )
