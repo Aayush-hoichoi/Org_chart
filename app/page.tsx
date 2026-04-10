@@ -214,6 +214,7 @@ export default function Page() {
           transformRef={transformRef}
           onTransformChange={() => {}}
           fitSignal={fitSignal}
+          verticalName={verticals.find(v => v.id === active)?.name}
         />
         </div>
 

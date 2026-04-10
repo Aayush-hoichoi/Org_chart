@@ -16,11 +16,27 @@ interface Props {
   transformRef: React.MutableRefObject<Transform>
   onTransformChange: (t: Transform) => void
   fitSignal: number
+  verticalName?: string
+}
+
+const LEGEND_ITEMS = [
+  { color: '#c4b5fd', label: 'In-Office, Kolkata' },
+  { color: '#fde047', label: 'Remote' },
+  { color: '#f87171', label: 'Moving Out' },
+  { color: '#4ade80', label: 'New Role' },
+  { color: '#fed7aa', label: 'Part-time Consultants' },
+  { color: '#d1fae5', label: 'Off-payroll' },
+  { color: '#93c5fd', label: 'hoichoi BD' },
+]
+
+function getCurrentMonthLabel() {
+  const now = new Date()
+  return now.toLocaleString('en-US', { month: 'short' }) + ' \'' + String(now.getFullYear()).slice(2)
 }
 
 export default function OrgCanvas({
   nodes, selected, deptFilter, statusFilter, onSelect, onDeselect,
-  transformRef, onTransformChange, fitSignal,
+  transformRef, onTransformChange, fitSignal, verticalName,
 }: Props) {
   const cwRef = useRef<HTMLDivElement>(null)
   const [t, setT] = useState<Transform>({ x: 0, y: 0, k: 1 })
@@ -162,6 +178,47 @@ export default function OrgCanvas({
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Legend + Headcount overlay */}
+      <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 5, display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
+        {/* Legend */}
+        <div style={{
+          background: 'rgba(255,255,255,0.96)', border: '1px solid #d8d5d2', borderRadius: 10,
+          padding: '10px 14px', boxShadow: '0 2px 8px rgba(20,20,20,.07)',
+        }}>
+          {LEGEND_ITEMS.map(({ color, label }) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+              <div style={{ width: 20, height: 14, borderRadius: 3, background: color, flexShrink: 0, border: '1px solid rgba(0,0,0,.09)' }} />
+              <span style={{ fontSize: 11.5, color: '#4b4946', whiteSpace: 'nowrap' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Headcount summary */}
+        {(() => {
+          const total = nodes.length
+          const payroll = nodes.filter(n => n.status === 'payroll').length
+          const consultant = nodes.filter(n => n.status === 'consultant').length
+          const name = verticalName || 'hoichoi'
+          const monthLabel = getCurrentMonthLabel()
+          return (
+            <div style={{
+              background: 'rgba(255,255,255,0.96)', border: '1px solid #d8d5d2', borderRadius: 8,
+              padding: '8px 12px', boxShadow: '0 2px 8px rgba(20,20,20,.07)',
+            }}>
+              <div style={{ fontSize: 12, lineHeight: 1.5 }}>
+                <span style={{ fontWeight: 700, color: '#141414' }}>{name} : {total}</span>
+                <span style={{ color: '#6f6d6b', fontSize: 11 }}> (Updated till end of {monthLabel})</span>
+              </div>
+              <div style={{ fontSize: 11.5, marginTop: 3, color: '#141414' }}>
+                <span style={{ fontWeight: 600 }}>Payroll : {payroll}</span>
+                <span style={{ color: '#6f6d6b' }}> | </span>
+                <span style={{ fontWeight: 600 }}>Consultant/Contracts : {consultant}</span>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Zoom controls */}
